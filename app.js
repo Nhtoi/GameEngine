@@ -16,5 +16,5 @@ window.addEventListener("DOMContentLoaded", function load() {
   //as in {attributeName : newValue} example, "{y : 100}"
   app.engine = createDrawableObject();
   app.engine.changeCanvasSize();
-  app.engine.init();
+  app.engine.gameLoop();
 });
