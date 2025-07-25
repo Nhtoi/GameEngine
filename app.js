@@ -1,20 +1,24 @@
 import Engine from "./src/engine/Game.js";
+import Entity from "./src/engine/Entities.js";
 
 window.app = {};
+function createGame({ gameArea = document.getElementById("canvas") } = {}) {
+  return new Engine(gameArea);
+}
 function createDrawableObject({
-  canvas = document.getElementById("canvas"),
   x = 10,
   y = 10,
   w = 150,
   h = 100,
+  sprite = null,
 } = {}) {
-  return new Engine(canvas, x, y, w, h);
+  return new Entity(x, y, w, h, sprite);
 }
 
 window.addEventListener("DOMContentLoaded", function load() {
-  //if you want to change the defaults pass them as arguments in the line below
-  //as in {attributeName : newValue} example, "{y : 100}"
-  app.engine = createDrawableObject();
+  app.engine = createGame();
   app.engine.changeCanvasSize();
+  app.entity = createDrawableObject();
+  app.engine.addEntity(app.entity);
   app.engine.gameLoop();
 });
