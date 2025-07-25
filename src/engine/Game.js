@@ -1,4 +1,5 @@
 import Entity from "./Entities.js";
+
 //TODO: Find a way to implement a way to end the game
 export default class Game {
   constructor(canvas) {
@@ -7,9 +8,12 @@ export default class Game {
     this.deltaTime = 0;
     this.canavas = canvas;
     this.checkCompatible(this.canavas);
+    this.animationId = null;
     this.ctx = this.canavas.getContext("2d");
     this.entities = [];
-    this.isRunning = true;
+    this.isRunning = false;
+    this.frameCounter = 0;
+    //filter out entities that are not "alive" or "out of render distance"
   }
   changeCanvasSize({ canvas = this.canavas, height = 250, width = 400 } = {}) {
     canvas.setAttribute("width", width);
@@ -23,6 +27,7 @@ export default class Game {
 
   gameLoop() {
     if (this.isRunning) {
+      this.frameCounter++;
       this.currentTime = this.getTime();
       var deltaTime = this.getDelta(this.currentTime, this.lastTime);
       this.lastTime = this.currentTime;
@@ -31,9 +36,10 @@ export default class Game {
         entity.update(deltaTime);
         entity.render();
       });
-      window.requestAnimationFrame(this.gameLoop.bind(this));
+      this.animationId = window.requestAnimationFrame(this.gameLoop.bind(this));
     } else {
-      window.cancelAnimationFrame(this);
+      window.cancelAnimationFrame(this.animationId);
+      this.clearCanvas();
     }
   }
 
@@ -63,7 +69,12 @@ export default class Game {
   }
   //TODO: IMPLEMENT A WAY TO END THE GAME/REMOVE AN ENTITY
   gameEnd() {
-    console.log("Called");
-    return false;
+    this.isRunning = false;
+  }
+
+  gameStart() {
+    this.isRunning = true;
+    this.frameCounter = 0;
+    return this.gameLoop();
   }
 }
