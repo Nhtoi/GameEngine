@@ -1,28 +1,32 @@
-export default class Game {
+import EventBus from "./EventBus.js";
+
+export default class GameEngine {
   constructor(canvas) {
     this.currentTime = 0;
     this.lastTime = 0;
     this.deltaTime = 0;
-    this.canavas = canvas;
-    this.checkCompatible(this.canavas);
+    this.canvas = canvas;
+    this.checkCompatible(this.canvas);
     this.animationId = null;
-    this.ctx = this.canavas.getContext("2d");
+    this.ctx = this.canvas.getContext("2d");
     this.entities = [];
     this.isRunning = false;
     this.frameCounter = 0;
+    this.events = new EventBus();
     //filter out entities that are not "alive" or "out of render distance"
   }
-  changeCanvasSize({ canvas = this.canavas, height = 250, width = 400 } = {}) {
+  changeCanvasSize({ canvas = this.canvas, height = 250, width = 400 } = {}) {
     canvas.setAttribute("width", width);
     canvas.setAttribute("height", height);
   }
 
   addEntity(entity) {
     entity.ctx = this.ctx;
+    entity.events = this.events;
     this.entities.push(entity);
   }
 
-  gameLoop() {
+  gameLoop = () => {
     if (this.isRunning) {
       this.frameCounter++;
       this.currentTime = this.getTime();
@@ -35,24 +39,28 @@ export default class Game {
         entity.render({ frameCounter: this.frameCounter });
       });
 
-      this.animationId = window.requestAnimationFrame(this.gameLoop.bind(this));
+      this.animationId = window.requestAnimationFrame(this.gameLoop);
     } else {
-      window.cancelAnimationFrame(this.animationId);
+      if (this.animationId) {
+        window.cancelAnimationFrame(this.animationId);
+        this.animationId = null;
+      }
       this.clearCanvas();
+      console.log("Game is really over");
     }
-  }
+  };
 
   getTime() {
     const date = Date.now();
     return date;
   }
 
-  checkCompatible({ canavas = this.canavas } = {}) {
-    if (canavas.getContext) {
+  checkCompatible({ canvas = this.canvas } = {}) {
+    if (canvas.getContext) {
       console.log("Compatible Canvas Found");
     } else {
       console.error(
-        canavas.outerHTML,
+        canvas.outerHTML,
         "Not Compatible with Canvas Operations \nPlease use tag <canvas>"
       );
       window.alert("DID NOT FIND CANVAS ");
@@ -64,12 +72,13 @@ export default class Game {
   }
 
   clearCanvas() {
-    return this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
   //TODO: IMPLEMENT A WAY TO END THE GAME/REMOVE AN ENTITY
-  gameEnd() {
+  gameEnd = () => {
+    console.log("Game Over");
     this.isRunning = false;
-  }
+  };
 
   gameStart() {
     this.isRunning = true;

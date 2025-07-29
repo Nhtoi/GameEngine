@@ -16,6 +16,7 @@ export default class Entity {
     animationStates,
     state
   ) {
+    this.events = null;
     this.ctx;
     this.text = text;
     this.spritePath = spritePath;
@@ -38,19 +39,8 @@ export default class Entity {
     this.animationStates = animationStates;
     this.spriteAnimations = {};
     this.sprite = new Image();
-
+    this.populateState();
     this.sprite.src = spritePath;
-    if (Array.isArray(animationStates)) {
-      animationStates.forEach((state, index) => {
-        let frames = { loc: [] };
-        for (let i = 0; i < state.frames; i++) {
-          let positionX = i * spriteWidth;
-          let positionY = index * spriteHeight;
-          frames.loc.push({ x: positionX, y: positionY });
-        }
-        this.spriteAnimations[state.name] = frames;
-      });
-    }
     this.allowedTypes = [
       "player",
       "hud",
@@ -67,6 +57,20 @@ export default class Entity {
       );
     }
   }
+  populateState() {
+    if (Array.isArray(this.animationStates)) {
+      this.animationStates.forEach((state, index) => {
+        let frames = { loc: [] };
+        for (let i = 0; i < state.frames; i++) {
+          let positionX = i * this.spriteWidth;
+          let positionY = index * this.spriteHeight;
+          frames.loc.push({ x: positionX, y: positionY });
+        }
+        this.spriteAnimations[state.name] = frames;
+      });
+    }
+  }
+
   render({
     ctx = this.ctx,
     x = this.xpos,
@@ -169,15 +173,12 @@ export default class Entity {
   } = {}) {
     const framesPerSecond = 5;
     const frameDuration = 60 / framesPerSecond;
-
     const position =
       Math.floor(frameCounter / frameDuration) %
       this.spriteAnimations[state].loc.length;
-
     const sx = this.spriteWidth * position;
     //console.log(state);
     const sy = this.spriteAnimations[state].loc[position].y;
-
     ctx.globalCompositeOperation = "destination-over";
     ctx.drawImage(
       this.sprite,
