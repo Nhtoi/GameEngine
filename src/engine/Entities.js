@@ -1,5 +1,21 @@
+//TODO: CLEAN UP THIS CLASS
+
 export default class Entity {
-  constructor(x, y, w, h, type, spritePath, text) {
+  constructor(
+    x,
+    y,
+    w,
+    h,
+    type,
+    spritePath,
+    text,
+    spriteHeight,
+    spriteWidth,
+    frameX,
+    frameY,
+    animationStates,
+    state
+  ) {
     this.ctx;
     this.text = text;
     this.spritePath = spritePath;
@@ -12,6 +28,29 @@ export default class Entity {
     this.currentFrame = 0;
     this.frameThreshold = 400;
     this.type = type;
+    this.delta = 0;
+    //image, source-x, source-y, source-w, source-h, destination-x, destination-y, destination-w, destination-h
+    this.state = state;
+    this.frameX = frameX;
+    this.frameY = frameY;
+    this.spriteWidth = spriteWidth;
+    this.spriteHeight = spriteHeight;
+    this.animationStates = animationStates;
+    this.spriteAnimations = {};
+    this.sprite = new Image();
+
+    this.sprite.src = spritePath;
+    if (Array.isArray(animationStates)) {
+      animationStates.forEach((state, index) => {
+        let frames = { loc: [] };
+        for (let i = 0; i < state.frames; i++) {
+          let positionX = i * spriteWidth;
+          let positionY = index * spriteHeight;
+          frames.loc.push({ x: positionX, y: positionY });
+        }
+        this.spriteAnimations[state.name] = frames;
+      });
+    }
     this.allowedTypes = [
       "player",
       "hud",
@@ -28,7 +67,6 @@ export default class Entity {
       );
     }
   }
-  //TODO: ALLOW TO CHOSE WHAT KIND OF RENDERING, TEXT, SPITE, BACKGROUND, PLATFORMS ETC...
   render({
     ctx = this.ctx,
     x = this.xpos,
@@ -38,17 +76,29 @@ export default class Entity {
     type = this.type,
     spritePath = this.spritePath,
     text = this.text,
+    frameX = this.frameX,
+    frameY = this.frameY,
+    spriteWidth = this.spriteWidth,
+    spriteHeight = this.spriteHeight,
+    frameCounter,
+    state = this.state,
   } = {}) {
     switch (type) {
       case "player":
-        // this.renderPlayer({
-        //   ctx: ctx,
-        //   x: x,
-        //   y: y,
-        //   w: w,
-        //   h: h,
-        //   spritePath: spritePath,
-        // });
+        this.renderPlayer({
+          ctx: ctx,
+          spritePath: spritePath,
+          x: x,
+          y: y,
+          w: w,
+          h: h,
+          frameX: frameX,
+          frameY: frameY,
+          spriteWidth: spriteWidth,
+          spriteHeight: spriteHeight,
+          frameCounter: frameCounter,
+          state: state,
+        });
         break;
       //probably redundant
       case "enemy":
@@ -108,10 +158,42 @@ export default class Entity {
 
   renderHud() {}
 
-  renderPlayer() {}
+  renderPlayer({
+    ctx = this.ctx,
+    x = this.xpos,
+    y = this.ypos,
+    w = this.width,
+    h = this.height,
+    frameCounter = 0,
+    state = this.state,
+  } = {}) {
+    const framesPerSecond = 5;
+    const frameDuration = 60 / framesPerSecond;
+
+    const position =
+      Math.floor(frameCounter / frameDuration) %
+      this.spriteAnimations[state].loc.length;
+
+    const sx = this.spriteWidth * position;
+    //console.log(state);
+    const sy = this.spriteAnimations[state].loc[position].y;
+
+    ctx.globalCompositeOperation = "destination-over";
+    ctx.drawImage(
+      this.sprite,
+      sx,
+      sy,
+      this.spriteWidth,
+      this.spriteHeight,
+      x,
+      y,
+      this.spriteWidth,
+      this.spriteHeight
+    );
+  }
 
   //TODO: ALLOW FOR MORE CONTROL OVER THE UPDATE, HEALTH, POSITION (FOR NOW)
-  update(delta) {
-    this.frameCount += delta;
+  update(delta, frameCounter) {
+    this.frameCount = frameCounter; // or this.frameCount++ if independent
   }
 }

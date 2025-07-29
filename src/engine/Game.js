@@ -1,6 +1,3 @@
-import Entity from "./Entities.js";
-
-//TODO: Find a way to implement a way to end the game
 export default class Game {
   constructor(canvas) {
     this.currentTime = 0;
@@ -29,13 +26,15 @@ export default class Game {
     if (this.isRunning) {
       this.frameCounter++;
       this.currentTime = this.getTime();
-      var deltaTime = this.getDelta(this.currentTime, this.lastTime);
+      const deltaTime = this.getDelta(this.currentTime, this.lastTime);
       this.lastTime = this.currentTime;
       this.clearCanvas();
-      this.entities.forEach(function update(entity) {
-        entity.update(deltaTime);
-        entity.render();
+
+      this.entities.forEach((entity) => {
+        entity.update(deltaTime, this.frameCounter);
+        entity.render({ frameCounter: this.frameCounter });
       });
+
       this.animationId = window.requestAnimationFrame(this.gameLoop.bind(this));
     } else {
       window.cancelAnimationFrame(this.animationId);
