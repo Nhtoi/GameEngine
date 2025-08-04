@@ -2,6 +2,7 @@ export default class EventBus {
   constructor() {
     this.events = {};
   }
+
   on(eventName, callBack) {
     if (typeof callBack !== "function") {
       throw new Error("callback is not a function");
@@ -23,7 +24,6 @@ export default class EventBus {
     this.events[eventName].forEach((callBack) => callBack(payload));
   }
   once(eventName, callback) {
-    let called = false;
     const wrapper = (payload) => {
       callback(payload);
       this.off(eventName, wrapper);

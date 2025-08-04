@@ -1,5 +1,7 @@
 import Engine from "./src/engine/GameEngine.js";
 import Entity from "./src/engine/Entities.js";
+import InputManager from "./src/engine/InputManager.js";
+import EventBus from "./src/engine/EventBus.js";
 
 window.app = {};
 function createGame({ gameArea = document.getElementById("canvas") } = {}) {
@@ -18,7 +20,7 @@ function createDrawableObject({
   frameX = 0,
   frameY = 0,
   animationStates = null,
-  state = null,
+  animation = null,
 } = {}) {
   return new Entity(
     x,
@@ -33,8 +35,12 @@ function createDrawableObject({
     frameX,
     frameY,
     animationStates,
-    state
+    animation
   );
+}
+
+function createInputManager(eventBus) {
+  return new InputManager(eventBus);
 }
 
 async function getAnimationData(url) {
@@ -47,10 +53,13 @@ window.addEventListener("DOMContentLoaded", async function load() {
   app.engine = createGame();
   app.engine.changeCanvasSize({ width: 600, height: 600 });
   app.engine.gameStart();
+  const InputManager = createInputManager(app.engine.events);
 
   const background = createDrawableObject({
     x: 0,
     y: 0,
+    w: 600,
+    h: 520,
     type: "background",
     spritePath: "./images/white.jpg",
   });
@@ -58,50 +67,50 @@ window.addEventListener("DOMContentLoaded", async function load() {
   const spriteWidth = 575;
   const spriteHeight = 523;
   const playerAnimationInfo = "./src/game/data/playerAnimation.json";
-
   const playerAnimations = await getAnimationData(playerAnimationInfo);
+  const animation = "idle";
+  const text = createDrawableObject({ text: "Hello", type: "text" });
 
-  const state = "idle";
   const player = createDrawableObject({
     type: "player",
     x: 0,
     y: 0,
+    w: spriteWidth,
+    h: spriteHeight,
     frameX: 0,
     frameY: 0,
     spriteHeight,
     spriteWidth,
     spritePath: "./images/good-sprite.png",
     animationStates: playerAnimations,
-    state,
+    animation,
   });
 
-  const changeState = document.getElementById("state-select");
-  changeState.addEventListener("change", () => {
-    player.state = changeState.value || "idle";
+  app.engine.events.on("keydown", (key) => {
+    if (key == "w") {
+      console.log("Move Forward");
+    }
   });
+
+  app.engine.events.on("keyup", (key) => {
+    if (key == "w") {
+      console.log("Stop moving forward");
+    }
+  });
+
+  const changeAnimation = document.getElementById("animation-select");
+  changeAnimation.addEventListener("change", () => {
+    player.animation = changeAnimation.value || "idle";
+  });
+
+  player.setCollisionBox({
+    width: spriteWidth - 50,
+    height: spriteHeight - 70,
+    offsetY: 35,
+  });
+  player.showDebugCollision = true;
+  // text.showDebugCollision = true;
   app.engine.addEntity(player);
-  app.engine.addEntity(background);
-
-  function logThisOnce() {
-    console.log("only once");
-  }
-  function logThisMultipleTimes() {
-    console.log("a lot of times");
-  }
-
-  // player.events.on("test", logThis);
-  player.events.on("healthZero", app.engine.gameEnd);
-
-  // player.events.on("test", logThis);
-  player.events.once("testOnce", logThisOnce);
-  player.events.emit("testOnce");
-  player.events.emit("testOnce");
-  player.events.emit("testOnce");
-
-  player.events.on("testMultiple", logThisMultipleTimes);
-  player.events.emit("testMultiple");
-  player.events.emit("testMultiple");
-  player.events.emit("testMultiple");
-
-  // player.events.clear("test")
+  // app.engine.addEntity(text);
+  // app.engine.addEntity(background);
 });
