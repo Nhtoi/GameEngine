@@ -1,7 +1,8 @@
-import EventBus from "./EventBus.js";
-
-export default class GameEngine {
+import EventBus from "../utils/EventBus.js";
+import CollisionChecker from "../utils/CollisionChecker.js";
+export default class GameEngine extends CollisionChecker {
   constructor(canvas) {
+    super();
     this.currentTime = 0;
     this.lastTime = 0;
     this.deltaTime = 0;
@@ -26,6 +27,22 @@ export default class GameEngine {
     this.entities.push(entity);
   }
 
+  checkCollision() {
+    for (let i = 0; i < this.entities.length; i++) {
+      for (let j = i + 1; j < this.entities.length; j++) {
+        const entity1 = this.entities[i];
+        const entity2 = this.entities[j];
+        if (this.checkEntityCollision(entity1, entity2)) {
+          this.handleCollision(entity1, entity2);
+        }
+      }
+    }
+  }
+  handleCollision(entity1, entity2) {
+    this.events.emit("collision", { entity1, entity2 });
+    console.log(`Collision between ${entity1} and ${entity2} `);
+  }
+
   gameLoop = () => {
     if (this.isRunning) {
       this.frameCounter++;
@@ -38,7 +55,7 @@ export default class GameEngine {
         entity.update(deltaTime, this.frameCounter);
         entity.render({ frameCounter: this.frameCounter });
       });
-
+      this.checkCollision();
       this.animationId = window.requestAnimationFrame(this.gameLoop);
     } else {
       if (this.animationId) {

@@ -1,7 +1,7 @@
 import Engine from "./src/engine/GameEngine.js";
-import Entity from "./src/engine/Entities.js";
-import InputManager from "./src/engine/InputManager.js";
-import EventBus from "./src/engine/EventBus.js";
+import Entity from "./src/utils/Entities.js";
+import InputManager from "./src/utils/InputManager.js";
+import EventBus from "./src/utils/EventBus.js";
 
 window.app = {};
 function createGame({ gameArea = document.getElementById("canvas") } = {}) {
@@ -98,19 +98,43 @@ window.addEventListener("DOMContentLoaded", async function load() {
     }
   });
 
+  app.engine.events.on("collision", ({ player, enemy }) => {
+    console.log("collision detected");
+  });
+
+  const enemy = createDrawableObject({ type: "text", text: "hello" });
+  enemy.setCollision({
+    collisionShape: "box",
+    width: 50,
+    height: 50,
+    offsetX: -35,
+    offsetY: 35,
+  });
+
   const changeAnimation = document.getElementById("animation-select");
   changeAnimation.addEventListener("change", () => {
     player.animation = changeAnimation.value || "idle";
   });
 
-  player.setCollisionBox({
-    width: spriteWidth - 50,
-    height: spriteHeight - 70,
-    offsetY: 35,
+  player.setCollision({
+    collisionShape: "circle",
+    radius: 235,
+    offsetX: 0,
+    offsetY: 25,
   });
+
+  // player.setCollision({
+  //   collisionShape: "box",
+  //   width: spriteWidth - 100,
+  //   height: spriteHeight - 78,
+  //   offsetX: 0,
+  //   offsetY: 35,
+  // });
+  enemy.showDebugCollision = true;
   player.showDebugCollision = true;
   // text.showDebugCollision = true;
   app.engine.addEntity(player);
+  app.engine.addEntity(enemy);
   // app.engine.addEntity(text);
   // app.engine.addEntity(background);
 });

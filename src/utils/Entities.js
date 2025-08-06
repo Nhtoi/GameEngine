@@ -26,6 +26,7 @@ export default class Entity {
     this.width = w;
     this.height = h;
 
+    this.radius = 0;
     this.collisionWidth = w * 0.8;
     this.collisionHeight = h * 0.8;
     this.collisionOffsetX = 0;
@@ -138,7 +139,11 @@ export default class Entity {
         break;
     }
     if (this.showDebugCollision) {
-      this.debugDrawCollisionBox({ ctx, color: "lightblue" });
+      if (this.collisionRadius !== undefined && this.collisionRadius > 0) {
+        this.debugDrawCollisionCircle({ ctx, color: "lightgreen" });
+      } else {
+        this.debugDrawCollisionBox({ ctx, color: "lightblue" });
+      }
     }
   }
 
@@ -203,9 +208,68 @@ export default class Entity {
 
   //TODO: ALLOW FOR MORE CONTROL OVER THE UPDATE, HEALTH, POSITION (FOR NOW)
   update(delta, frameCounter) {
+    // this.checkCollision();
     this.frameCount = frameCounter;
   }
 
+  setCollision({
+    collisionShape = new String(),
+    radius = this.radius,
+    X = this.collisionX,
+    Y = this.collisionY,
+    width = this.collisionWidth,
+    height = this.collisionHeight,
+    offsetX = this.collisionOffsetX,
+    offsetY = this.collisionOffsetY,
+    XPercent = null,
+    YPercent = null,
+    anchorX = "center",
+    anchorY = "center",
+  } = {}) {
+    console.log(collisionShape);
+    switch (collisionShape.toLowerCase()) {
+      case "box":
+        console.log("picked Box");
+        this.setCollisionBox({
+          width: width,
+          height: height,
+          offsetX: offsetX,
+          offsetY: offsetY,
+          XPercent: null,
+          YPercent: null,
+          anchorX: "center",
+          anchorY: "center",
+        });
+        break;
+      case "circle":
+        this.setCollisionCircle({
+          radius: radius,
+          X: X,
+          Y: Y,
+          offsetX: offsetX,
+          offsetY: offsetY,
+          XPercent: null,
+          YPercent: null,
+          anchorX: "center",
+          anchorY: "center",
+        });
+        break;
+      default:
+        break;
+    }
+  }
+  getCollisionCircle() {
+    const centerX = this.xpos + this.width / 2 + this.collisionOffsetX;
+    const centerY = this.ypos + this.height / 2 + this.collisionOffsetY;
+
+    return {
+      x: centerX,
+      y: centerY,
+      radius: this.collisionRadius,
+      centerX: centerX,
+      centerY: centerY,
+    };
+  }
   getCollisionBox() {
     const centerX = this.xpos + this.width / 2;
     const centerY = this.ypos + this.height / 2;
@@ -223,6 +287,57 @@ export default class Entity {
       centerX: centerX + this.collisionOffsetX,
       centerY: centerY + this.collisionOffsetY,
     };
+  }
+
+  setCollisionCircle({
+    radius = this.radius,
+    X = this.collisionX,
+    Y = this.collisionY,
+    offsetX = this.collisionOffsetX,
+    offsetY = this.collisionOffsetY,
+    XPercent = null,
+    YPercent = null,
+    anchorX = "center", // 'left', 'center', 'right'
+    anchorY = "center", // 'top', 'center', 'bottom'
+  } = {}) {
+    if (XPercent !== null) {
+      X = this.X * (XPercent / 100);
+    }
+    if (YPercent !== null) {
+      Y = this.Y * (YPercent / 100);
+    }
+
+    if (anchorX !== "center" || anchorY !== "center") {
+      switch (anchorX) {
+        case "left":
+          offsetX = -(this.X / 2) + X / 2;
+          break;
+        case "right":
+          offsetX = this.X / 2 - X / 2;
+          break;
+        default:
+          offsetX = 0;
+      }
+
+      switch (anchorY) {
+        case "top":
+          offsetY = -(this.Y / 2) + Y / 2;
+          break;
+        case "bottom":
+          offsetY = this.Y / 2 - Y / 2;
+          break;
+        default:
+          offsetY = 0;
+      }
+    }
+    this.collisionX = X;
+    this.collisionY = Y;
+    this.collisionRadius = radius;
+    this.collisionOffsetX = offsetX;
+    this.collisionOffsetY = offsetY;
+    console.log(
+      `Set Collision for ${this.type} to CIRCLE, X: ${this.collisionX}, Y: ${this.collisionY}, OffsetX: ${this.collisionOffsetX}, OffsetY: ${this.collisionOffsetY}`
+    );
   }
 
   setCollisionBox({
@@ -272,19 +387,7 @@ export default class Entity {
     this.collisionOffsetY = offsetY;
 
     console.log(
-      `Set Collision for ${this.type} to Width: ${this.collisionWidth}, Height: ${this.collisionHeight}, OffsetX: ${this.collisionOffsetX}, OffsetY: ${this.collisionOffsetY}`
-    );
-  }
-
-  checkCollision(otherEntity) {
-    const thisBox = this.getCollisionBox();
-    const otherBox = otherEntity.getCollisionBox();
-
-    return (
-      thisBox.x < otherBox.x + otherBox.width &&
-      thisBox.x + thisBox.width > otherBox.x &&
-      thisBox.y < otherBox.y + otherBox.height &&
-      thisBox.y + thisBox.height > otherBox.y
+      `Set Collision for ${this.type} to SQUARE, Width: ${this.collisionWidth}, Height: ${this.collisionHeight}, OffsetX: ${this.collisionOffsetX}, OffsetY: ${this.collisionOffsetY}`
     );
   }
 
@@ -300,8 +403,24 @@ export default class Entity {
     ctx.restore();
   }
 
+  debugDrawCollisionCircle({ ctx = this.ctx, color = "lightgreen" } = {}) {
+    const centerX = this.xpos + this.width / 2 + this.collisionOffsetX;
+    const centerY = this.ypos + this.height / 2 + this.collisionOffsetY;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, this.collisionRadius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.fillRect(centerX - 2, centerY - 2, 4, 4);
+    ctx.restore();
+  }
+
   getCollisionLevel() {
-    return { "collision-z": this.collisionLevel };
+    return this.collisionLevel;
   }
 
   setCollisionLevel({ collisionZ = this.collisionLevel } = {}) {
