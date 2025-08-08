@@ -104,9 +104,8 @@ window.addEventListener("DOMContentLoaded", async function load() {
 
   const enemy = createDrawableObject({ type: "text", text: "hello" });
   enemy.setCollision({
-    collisionShape: "box",
-    width: 50,
-    height: 50,
+    collisionShape: "circle",
+    radius: 50,
     offsetX: -35,
     offsetY: 35,
   });

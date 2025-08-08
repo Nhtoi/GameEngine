@@ -1,3 +1,5 @@
+//TODO: figure out a way to modularly add differnt shapes for collision
+
 export default class CollisionChecker {
   checkEntityCollision(entity1, entity2) {
     const collisionLevel =

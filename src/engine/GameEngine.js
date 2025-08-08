@@ -1,3 +1,4 @@
+//TODO: filter out entities that are not "alive" or "out of render distance"
 import EventBus from "../utils/EventBus.js";
 import CollisionChecker from "../utils/CollisionChecker.js";
 export default class GameEngine extends CollisionChecker {
@@ -14,7 +15,6 @@ export default class GameEngine extends CollisionChecker {
     this.isRunning = false;
     this.frameCounter = 0;
     this.events = new EventBus();
-    //filter out entities that are not "alive" or "out of render distance"
   }
   changeCanvasSize({ canvas = this.canvas, height = 250, width = 400 } = {}) {
     canvas.setAttribute("width", width);
@@ -92,6 +92,7 @@ export default class GameEngine extends CollisionChecker {
     return this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
   //TODO: IMPLEMENT A WAY TO END THE GAME/REMOVE AN ENTITY
+
   gameEnd = () => {
     console.log("Game Over");
     this.isRunning = false;
